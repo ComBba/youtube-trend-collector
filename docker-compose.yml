@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: youtube-trend-collector
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config:ro
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/data/trends.db
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - PORT=3000
+      - TZ=Asia/Seoul
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Cron job for scheduled collection
+  cron:
+    build: .
+    container_name: youtube-trend-collector-cron
+    command: >
+      sh -c "
+        echo '0 9 * * * cd /app && npm run collect >> /var/log/cron.log 2>&1' > /etc/crontabs/root &&
+        crond -f -l 2
+      "
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config:ro
+      - ./logs:/var/log
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/data/trends.db
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - TZ=Asia/Seoul
+    restart: unless-stopped
+    depends_on:
+      - app
+
+volumes:
+  data:
+  logs:
