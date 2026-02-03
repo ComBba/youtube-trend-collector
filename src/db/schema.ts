@@ -1,4 +1,4 @@
-import { sqliteTable, integer, text, real } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
 
 // 키워드 테이블

@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { CollectAllResult, CollectResult } from './collector.js';
+import { CollectAllResult } from './collector.js';
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;

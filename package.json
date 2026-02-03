@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "echo 'No linter configured yet'"
+    "lint": "eslint src/ --max-warnings 0",
+    "lint:fix": "eslint src/ --fix"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
@@ -30,6 +31,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/better-sqlite3": "^7.6.11",
     "@types/node": "^20.14.0",
     "@types/node-cron": "^3.0.11",
@@ -37,8 +39,10 @@
     "@types/supertest": "^6.0.3",
     "@vitest/coverage-v8": "^4.0.18",
     "drizzle-kit": "^0.27.0",
+    "eslint": "^9.39.2",
     "tsx": "^4.11.0",
     "typescript": "^5.4.5",
+    "typescript-eslint": "^8.54.0",
     "vitest": "^4.0.18"
   },
   "keywords": [

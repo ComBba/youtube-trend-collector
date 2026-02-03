@@ -42,13 +42,13 @@ export async function searchYouTube(
   const searchPrefix = opts.maxAgeDays ? 'ytsearchdate' : 'ytsearch';
   const searchQuery = `${searchPrefix}${limit}:${keyword}`;
 
-  // 정렬 및 필터 옵션
-  const sortMap: Record<string, string> = {
-    relevance: '',
-    upload_date: 'upload_date',
-    view_count: 'view_count',
-    rating: 'rating',
-  };
+  // 정렬 및 필터 옵션 (추후 고급 정렬 기능에 사용 예정)
+  // const sortMap: Record<string, string> = {
+  //   relevance: '',
+  //   upload_date: 'upload_date',
+  //   view_count: 'view_count',
+  //   rating: 'rating',
+  // };
 
   // ytsearchdate 사용 시 최신 영상 위주로 검색됨
   const args: string[] = [
@@ -95,7 +95,7 @@ export async function searchYouTube(
         try {
           const info = JSON.parse(line);
           videos.push(parseVideoInfo(info));
-        } catch (e) {
+        } catch {
           // JSON 파싱 실패 무시
         }
       }
@@ -162,7 +162,7 @@ export async function getVideoInfo(videoId: string): Promise<VideoInfo> {
       try {
         const info = JSON.parse(output);
         resolve(parseVideoInfo(info));
-      } catch (e) {
+      } catch {
         reject(new Error('Failed to parse video info'));
       }
     });
@@ -174,7 +174,8 @@ export async function getVideoInfo(videoId: string): Promise<VideoInfo> {
 /**
  * yt-dlp 출력 파싱
  */
-function parseVideoInfo(data: any): VideoInfo {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseVideoInfo(data: Record<string, any>): VideoInfo {
   // 업로드 날짜 파싱
   let publishedAt: Date | undefined;
   if (data.upload_date) {

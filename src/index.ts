@@ -64,7 +64,7 @@ async function setup() {
     // 수동 수집 트리거
     fastify.post('/api/collect/manual', async (req, reply) => {
       try {
-        const limit = parseInt((req.body as any)?.limit) || 10;
+        const limit = parseInt((req.body as { limit?: string })?.limit ?? '') || 10;
         const result = await collectAll(limit);
         await notifyCollectionResult(result);
         return reply.send({ success: true, result });
@@ -78,7 +78,7 @@ async function setup() {
 
     // 요약 정보
     fastify.get('/api/summary', async (req, reply) => {
-      const days = parseInt((req.query as any).days) || 7;
+      const days = parseInt((req.query as { days?: string }).days ?? '') || 7;
       const summary = await getRecentSummary(days);
       return reply.send(summary);
     });

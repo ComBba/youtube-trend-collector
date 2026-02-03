@@ -1,6 +1,6 @@
 import { db } from '../db/index.js';
 import { keywords, videos, trends, collectionLogs } from '../db/schema.js';
-import { searchYouTube, VideoInfo, checkYtDlp } from './youtube.js';
+import { searchYouTube, checkYtDlp } from './youtube.js';
 import { eq, and, gte, sql } from 'drizzle-orm';
 
 export interface CollectResult {
@@ -19,8 +19,8 @@ export interface CollectAllResult {
   status: 'success' | 'partial' | 'failed';
 }
 
-// 수집할 비디오의 최대 나이 (일 단위)
-const MAX_VIDEO_AGE_DAYS = 7;
+// 수집할 비디오의 최대 나이 (일 단위) - 추후 필터링에 사용 예정
+// const MAX_VIDEO_AGE_DAYS = 7;
 
 /**
  * 단일 키워드로 비디오 수집

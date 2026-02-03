@@ -244,7 +244,7 @@ export async function trendRoutes(app: FastifyInstance) {
 export async function logRoutes(app: FastifyInstance) {
   // GET /api/logs - 수집 로그
   app.get('/', async (req, reply) => {
-    const limit = parseInt((req.query as any).limit) || 20;
+    const limit = parseInt((req.query as { limit?: string }).limit ?? '') || 20;
 
     const logs = await db
       .select()
