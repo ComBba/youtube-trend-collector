@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { collectByKeyword, collectAll } from '../src/services/collector';
 import * as youtubeService from '../src/services/youtube';
 import { db } from '../src/db/index';
@@ -56,6 +56,11 @@ vi.mock('../src/services/youtube', () => ({
 describe('collector service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('collectByKeyword', () => {
@@ -104,13 +109,15 @@ describe('collector service', () => {
 
       vi.mocked(youtubeService.searchYouTube).mockResolvedValue([]);
 
-      // Mock the videos select in updateTrends
-      (db.select() as any).from().where.mockResolvedValue([]);
+      const promise = collectAll();
+      
+      // Advance timers to skip sleep
+      await vi.runAllTimersAsync();
 
-      const result = await collectAll();
+      const result = await promise;
 
       expect(result.totalKeywords).toBe(2);
       expect(youtubeService.searchYouTube).toHaveBeenCalledTimes(2);
-    }, 10000);
+    });
   });
 });
