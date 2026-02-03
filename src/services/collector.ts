@@ -19,6 +19,9 @@ export interface CollectAllResult {
   status: 'success' | 'partial' | 'failed';
 }
 
+// 수집할 비디오의 최대 나이 (일 단위)
+const MAX_VIDEO_AGE_DAYS = 7;
+
 /**
  * 단일 키워드로 비디오 수집
  */
@@ -47,8 +50,9 @@ export async function collectByKeyword(
     // YouTube 검색
     const searchResults = await searchYouTube(keyword.name, { limit });
 
-    // 비디오 저장
+    // 비디오 저장 (ytsearchdate로 이미 최신 영상 위주로 검색됨)
     let collectedCount = 0;
+
     for (const video of searchResults) {
       try {
         await db

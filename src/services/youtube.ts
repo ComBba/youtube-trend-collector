@@ -18,11 +18,13 @@ export interface SearchOptions {
   limit?: number;
   sort?: 'relevance' | 'upload_date' | 'view_count' | 'rating';
   dateRange?: 'today' | 'this_week' | 'this_month' | 'this_year';
+  maxAgeDays?: number; // 최근 N일 이내 영상만 수집
 }
 
 const DEFAULT_OPTIONS: SearchOptions = {
   limit: 10,
   sort: 'view_count',
+  maxAgeDays: 7, // 기본값: 7일 이내
 };
 
 /**
@@ -36,7 +38,9 @@ export async function searchYouTube(
   const { limit, sort, dateRange } = opts;
 
   // yt-dlp 검색 URL 형식
-  const searchQuery = `ytsearch${limit}:${keyword}`;
+  // ytsearchdate: 업로드 날짜순 (최신순), ytsearch: 관련성순
+  const searchPrefix = opts.maxAgeDays ? 'ytsearchdate' : 'ytsearch';
+  const searchQuery = `${searchPrefix}${limit}:${keyword}`;
 
   // 정렬 및 필터 옵션
   const sortMap: Record<string, string> = {
@@ -46,6 +50,7 @@ export async function searchYouTube(
     rating: 'rating',
   };
 
+  // ytsearchdate 사용 시 최신 영상 위주로 검색됨
   const args: string[] = [
     searchQuery,
     '--dump-json',
@@ -59,8 +64,13 @@ export async function searchYouTube(
     args.push('--playlist-end', String(limit));
   }
 
-  // 날짜 필터
-  if (dateRange) {
+  // 날짜 필터 - maxAgeDays 우선 적용
+  if (opts.maxAgeDays) {
+    const dateAfter = new Date();
+    dateAfter.setDate(dateAfter.getDate() - opts.maxAgeDays);
+    const dateStr = dateAfter.toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+    args.push('--dateafter', dateStr);
+  } else if (dateRange) {
     const dateFilter: Record<string, string> = {
       today: 'today',
       this_week: 'thisweek',
