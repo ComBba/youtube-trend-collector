@@ -13,7 +13,9 @@
     "db:studio": "drizzle-kit studio",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'No linter configured yet'"
   },
   "dependencies": {
     "@fastify/cors": "^9.0.1",
