@@ -24,29 +24,8 @@ services:
       retries: 3
       start_period: 10s
 
-  # Cron job for scheduled collection
-  cron:
-    build: .
-    container_name: youtube-trend-collector-cron
-    command: >
-      sh -c "
-        echo '0 9 * * * cd /app && npm run collect >> /var/log/cron.log 2>&1' > /etc/crontabs/root &&
-        crond -f -l 2
-      "
-    volumes:
-      - ./data:/app/data
-      - ./config:/app/config:ro
-      - ./logs:/var/log
-    environment:
-      - NODE_ENV=production
-      - DATABASE_PATH=/app/data/trends.db
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
-      - TZ=Asia/Seoul
-    restart: unless-stopped
-    depends_on:
-      - app
+# Note: Cron scheduling handled by OpenClaw cron (API call)
+# No separate cron container needed
 
 volumes:
   data:
-  logs:
