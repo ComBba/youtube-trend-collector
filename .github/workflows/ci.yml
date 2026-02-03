@@ -8,8 +8,8 @@ on:
 
 jobs:
   test:
-    runs-on: self-hosted
-    # Mac Mini M 시리즈에서 실행
+    runs-on: [self-hosted, macos, arm64, kimsejun-macmini]
+    # Mac Mini M 시리즈 (kimsejun-macmini)
 
     steps:
       - name: Checkout
@@ -36,7 +36,7 @@ jobs:
         run: npm run build
 
   docker:
-    runs-on: self-hosted
+    runs-on: [self-hosted, macos, arm64, kimsejun-macmini]
     needs: test
 
     steps:
