@@ -21,7 +21,8 @@ initDb();
 async function setup() {
   // 미들웨어 등록
   await app.register(cors, {
-    origin: '*',
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+    credentials: true,
   });
 
   // Swagger 설정
