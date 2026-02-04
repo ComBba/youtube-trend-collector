@@ -193,6 +193,7 @@ describe('video routes', () => {
     });
 
     expect(response.statusCode).toBe(400);
+    expect(response.json().error).toBe('Invalid query parameters');
   });
 
   it('GET / should return 400 for limit out of range', async () => {
@@ -202,6 +203,7 @@ describe('video routes', () => {
     });
 
     expect(response.statusCode).toBe(400);
+    expect(response.json().error).toBe('Invalid query parameters');
   });
 
   it('GET / should return 400 for negative offset', async () => {
@@ -211,6 +213,7 @@ describe('video routes', () => {
     });
 
     expect(response.statusCode).toBe(400);
+    expect(response.json().error).toBe('Invalid query parameters');
   });
 });
 
@@ -245,6 +248,9 @@ describe('trend routes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toHaveProperty('trends');
+    expect(response.json().trends).toEqual([
+      { id: 1, period: 'daily', keywordName: 'Keyword1', topVideoTitle: 'Top Video' },
+    ]);
   });
 
   it('GET / should return 400 for invalid query parameters', async () => {
@@ -275,6 +281,8 @@ describe('trend routes', () => {
     });
 
     expect(response.statusCode).toBe(200);
+    expect(response.json()).toHaveProperty('trends');
+    expect(response.json().trends[0].keywordName).toBe('React');
   });
 });
 
@@ -307,6 +315,7 @@ describe('log routes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toHaveProperty('logs');
+    expect(response.json().logs).toEqual(JSON.parse(JSON.stringify(mockLogs)));
   });
 
   it('GET / should respect custom limit parameter', async () => {
