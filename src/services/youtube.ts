@@ -83,39 +83,71 @@ export async function searchYouTube(
   return new Promise((resolve, reject) => {
     const videos: VideoInfo[] = [];
     const ytDlp = spawn('yt-dlp', args);
+
+    // NDJSON collector (chunk-safe, CRLF-safe, and safe close flush)
+    // NOTE: yt-dlp는 기본적으로 JSON 한 줄씩(NDJSON) 출력하지만,
+    //       chunk boundary가 임의라서 line boundary는 직접 복원해야 함.
+    const MAX_BUFFER_CHARS = 5_000_000; // safety net (대략 5MB)
+
     let buffer = '';
 
-    ytDlp.stdout.on('data', (data: Buffer) => {
-      buffer += data.toString();
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || ''; // 마지막 불완전한 라인 유지
+    const tryParseLine = (line: string) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
 
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const info = JSON.parse(line);
-          videos.push(parseVideoInfo(info));
-        } catch {
-          // JSON 파싱 실패 무시
-        }
+      try {
+        const info = JSON.parse(trimmed) as Record<string, unknown>;
+        videos.push(parseVideoInfo(info));
+      } catch {
+        // JSON 파싱 실패 무시 (yt-dlp가 간헐적으로 non-JSON 라인을 섞을 수 있음)
       }
-    });
+    };
+
+    const consumeNdjson = (chunk: Buffer | string) => {
+      buffer += chunk.toString();
+
+      // corrupted output 등으로 newline이 영원히 오지 않는 경우를 방어
+      if (buffer.length > MAX_BUFFER_CHARS) {
+        buffer = '';
+        return;
+      }
+
+      // split()은 chunk가 많을 때 alloc이 커질 수 있어 indexOf loop로 처리
+      while (true) {
+        const nl = buffer.indexOf('\n');
+        if (nl === -1) break;
+
+        let line = buffer.slice(0, nl);
+        if (line.endsWith('\r')) line = line.slice(0, -1); // CRLF
+        buffer = buffer.slice(nl + 1);
+
+        tryParseLine(line);
+      }
+    };
+
+    const flushNdjson = () => {
+      if (!buffer) return;
+
+      // Close 시점에 buffer 안에 여러 줄이 남아있을 수 있음 (trailing newline 없음)
+      const lines = buffer.split(/\r?\n/);
+      buffer = '';
+
+      for (const line of lines) tryParseLine(line);
+    };
+
+    ytDlp.stdout.on('data', consumeNdjson);
 
     ytDlp.stderr.on('data', (data: Buffer) => {
-      // stderr 로그는 무시하거나 디버그용으로 사용
-      console.debug('yt-dlp stderr:', data.toString().trim());
+      // stderr는 보통 progress/warnings 용도. 필요할 때만 debug 출력.
+      if (process.env.DEBUG_YTDLP === '1') {
+        console.debug('yt-dlp stderr:', data.toString().trim());
+      }
     });
 
     ytDlp.on('close', (code) => {
-      if (buffer) {
-        try {
-          const info = JSON.parse(buffer);
-          videos.push(parseVideoInfo(info));
-        } catch {
-          // 무시
-        }
-      }
+      flushNdjson();
 
+      // non-zero exit라도 일부 결과가 있으면 partial 결과를 반환
       if (code !== 0 && videos.length === 0) {
         reject(new Error(`yt-dlp exited with code ${code}`));
       } else {
@@ -124,7 +156,7 @@ export async function searchYouTube(
     });
 
     ytDlp.on('error', (err) => {
-      if (err.message.includes('ENOENT')) {
+      if (err instanceof Error && err.message.includes('ENOENT')) {
         reject(new Error('yt-dlp가 설치되어 있지 않습니다. 먼저 설치해주세요.'));
       } else {
         reject(err);
